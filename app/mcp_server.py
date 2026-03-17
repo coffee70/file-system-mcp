@@ -1,4 +1,5 @@
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 from .models import (
     ListDirRequest,
@@ -18,7 +19,13 @@ from .tools.propose_patch import handle_propose_patch
 from .tools.apply_patch import handle_apply_patch
 
 
-mcp = FastMCP("MCP Code Assistant", json_response=True)
+mcp = FastMCP(
+    "MCP Code Assistant",
+    json_response=True,
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=False,
+    ),
+)
 
 
 @mcp.tool()

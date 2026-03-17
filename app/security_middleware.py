@@ -12,6 +12,11 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         if expected:
             provided = request.headers.get("x-api-key")
 
+            # fallback to query param because ChatGPT connectors
+            # do not reliably send custom headers
+            if not provided:
+                provided = request.query_params.get("api_key")
+
             if provided != expected:
                 return JSONResponse(
                     {"error": "unauthorized"},
