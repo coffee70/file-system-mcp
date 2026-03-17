@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
+
 class ListDirRequest(BaseModel):
     path: str = Field(default=".")
     max_entries: int = Field(default=200, ge=1, le=1000)
@@ -104,6 +105,24 @@ class GitCommandResponse(BaseModel):
     returncode: int
     stdout: str
     stderr: str
+
+
+class RunCommandRequest(BaseModel):
+    command: str = Field(min_length=1)
+    args: List[str] = Field(default_factory=list)
+    cwd: str = Field(default=".")
+    timeout_seconds: Optional[int] = Field(default=None, ge=1)
+
+
+class RunCommandResponse(BaseModel):
+    ok: bool
+    command: List[str]
+    cwd: str
+    returncode: int
+    stdout: str
+    stderr: str
+    timed_out: bool
+    duration_ms: int
 
 
 class RepoMapDirSummary(BaseModel):

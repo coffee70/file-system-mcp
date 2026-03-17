@@ -16,6 +16,7 @@ from .models import (
     CopyFileRequest,
     MoveFileRequest,
     DeleteDirRequest,
+    RunCommandRequest,
 )
 from .tools.list_dir import handle_list_dir
 from .tools.read_file import handle_read_file
@@ -31,6 +32,7 @@ from .tools.delete_file import handle_delete_file
 from .tools.copy_file import handle_copy_file
 from .tools.move_file import handle_move_file
 from .tools.delete_dir import handle_delete_dir
+from .tools.run_command import handle_run_command
 
 
 mcp = FastMCP(
@@ -44,7 +46,6 @@ mcp = FastMCP(
 
 @mcp.tool()
 def list_dir(path: str = ".", max_entries: int = 200) -> dict:
-    """List files and directories under a path within the configured workspace root."""
     req = ListDirRequest(path=path, max_entries=max_entries)
     result = handle_list_dir(req)
     return result.model_dump()
@@ -52,7 +53,6 @@ def list_dir(path: str = ".", max_entries: int = 200) -> dict:
 
 @mcp.tool()
 def read_file(path: str, start_line: int = 1, end_line: int | None = None) -> dict:
-    """Read a text file from the configured workspace root."""
     req = ReadFileRequest(path=path, start_line=start_line, end_line=end_line)
     result = handle_read_file(req)
     return result.model_dump()
@@ -60,7 +60,6 @@ def read_file(path: str, start_line: int = 1, end_line: int | None = None) -> di
 
 @mcp.tool()
 def read_files(paths: list[str]) -> dict:
-    """Read multiple text files from the configured workspace root."""
     req = ReadFilesRequest(paths=paths)
     result = handle_read_files(req)
     return result.model_dump()
@@ -74,7 +73,6 @@ def ripgrep_search(
     context_lines: int = 0,
     max_results: int = 100,
 ) -> dict:
-    """Search repository text using ripgrep."""
     req = RipgrepSearchRequest(
         query=query,
         path=path,
@@ -93,7 +91,6 @@ def ast_grep_search(
     path: str = ".",
     max_results: int = 100,
 ) -> dict:
-    """Search repository code structure using ast-grep."""
     req = AstGrepSearchRequest(
         pattern=pattern,
         language=language,
@@ -106,7 +103,6 @@ def ast_grep_search(
 
 @mcp.tool()
 def propose_patch(path: str, instruction: str) -> dict:
-    """Propose a patch for a file and return a unified diff."""
     req = ProposePatchRequest(path=path, instruction=instruction)
     result = handle_propose_patch(req)
     return result.model_dump()
@@ -114,7 +110,6 @@ def propose_patch(path: str, instruction: str) -> dict:
 
 @mcp.tool()
 def apply_patch(path: str, diff: str) -> dict:
-    """Apply a unified diff patch to a file when writes are enabled."""
     req = ApplyPatchRequest(path=path, diff=diff)
     result = handle_apply_patch(req)
     return result.model_dump()
@@ -122,9 +117,25 @@ def apply_patch(path: str, diff: str) -> dict:
 
 @mcp.tool()
 def git_command(command: str, args: list[str] | None = None) -> dict:
-    """Run a git command inside the workspace repository."""
     req = GitCommandRequest(command=command, args=args)
     result = handle_git_command(req)
+    return result.model_dump()
+
+
+@mcp.tool()
+def run_command(
+    command: str,
+    args: list[str] | None = None,
+    cwd: str = ".",
+    timeout_seconds: int | None = None,
+) -> dict:
+    req = RunCommandRequest(
+        command=command,
+        args=args or [],
+        cwd=cwd,
+        timeout_seconds=timeout_seconds,
+    )
+    result = handle_run_command(req)
     return result.model_dump()
 
 
@@ -134,7 +145,6 @@ def get_repo_map(
     max_depth: int = 2,
     max_entries_per_dir: int = 20,
 ) -> dict:
-    """Return a compact architectural map of the repository."""
     req = GetRepoMapRequest(
         path=path,
         max_depth=max_depth,
@@ -146,7 +156,6 @@ def get_repo_map(
 
 @mcp.tool()
 def write_file(path: str, content: str, create_dirs: bool = True) -> dict:
-    """Write a file in a single call when writes are enabled."""
     req = WriteFileRequest(path=path, content=content, create_dirs=create_dirs)
     result = handle_write_file(req)
     return result.model_dump()
@@ -154,7 +163,6 @@ def write_file(path: str, content: str, create_dirs: bool = True) -> dict:
 
 @mcp.tool()
 def delete_file(path: str, missing_ok: bool = False) -> dict:
-    """Safely delete a file from the workspace."""
     req = DeleteFileRequest(path=path, missing_ok=missing_ok)
     result = handle_delete_file(req)
     return result.model_dump()
@@ -167,7 +175,6 @@ def delete_dir(
     missing_ok: bool = False,
     max_depth: int = 3,
 ) -> dict:
-    """Safely delete a directory from the workspace."""
     req = DeleteDirRequest(
         path=path,
         recursive=recursive,
@@ -180,7 +187,6 @@ def delete_dir(
 
 @mcp.tool()
 def copy_file(src: str, dst: str, overwrite: bool = False, create_dirs: bool = True) -> dict:
-    """Copy a file inside the workspace."""
     req = CopyFileRequest(src=src, dst=dst, overwrite=overwrite, create_dirs=create_dirs)
     result = handle_copy_file(req)
     return result.model_dump()
@@ -188,7 +194,6 @@ def copy_file(src: str, dst: str, overwrite: bool = False, create_dirs: bool = T
 
 @mcp.tool()
 def move_file(src: str, dst: str, overwrite: bool = False, create_dirs: bool = True) -> dict:
-    """Move or rename a file inside the workspace."""
     req = MoveFileRequest(src=src, dst=dst, overwrite=overwrite, create_dirs=create_dirs)
     result = handle_move_file(req)
     return result.model_dump()

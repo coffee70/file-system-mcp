@@ -25,9 +25,12 @@ def _get_env_int(name: str, default: int) -> int:
 WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", ".")).resolve()
 
 ENABLE_WRITES = _get_env_bool("ENABLE_WRITES", False)
+RUN_COMMAND_ENABLED = _get_env_bool("RUN_COMMAND_ENABLED", True)
 
 MAX_READ_LINES = _get_env_int("MAX_READ_LINES", 400)
 MAX_RESULTS = _get_env_int("MAX_RESULTS", 200)
 SUBPROCESS_TIMEOUT_SEC = _get_env_int("SUBPROCESS_TIMEOUT_SEC", 5)
+RUN_COMMAND_MAX_TIMEOUT_SEC = _get_env_int("RUN_COMMAND_MAX_TIMEOUT_SEC", 30)
+RUN_COMMAND_MAX_OUTPUT_CHARS = _get_env_int("RUN_COMMAND_MAX_OUTPUT_CHARS", 40_000)
 
 MAX_FILE_SIZE_BYTES = _get_env_int("MAX_FILE_SIZE_BYTES", 1_000_000)
