@@ -12,6 +12,7 @@ from .models import (
     GitCommandRequest,
     GetRepoMapRequest,
     WriteFileRequest,
+    DeleteFileRequest,
 )
 from .tools.list_dir import handle_list_dir
 from .tools.read_file import handle_read_file
@@ -23,6 +24,7 @@ from .tools.apply_patch import handle_apply_patch
 from .tools.git_command import handle_git_command
 from .tools.get_repo_map import handle_get_repo_map
 from .tools.write_file import handle_write_file
+from .tools.delete_file import handle_delete_file
 
 
 mcp = FastMCP(
@@ -111,12 +113,14 @@ def apply_patch(path: str, diff: str) -> dict:
     result = handle_apply_patch(req)
     return result.model_dump()
 
+
 @mcp.tool()
 def git_command(command: str, args: list[str] | None = None) -> dict:
     """Run a git command inside the workspace repository."""
     req = GitCommandRequest(command=command, args=args)
     result = handle_git_command(req)
     return result.model_dump()
+
 
 @mcp.tool()
 def get_repo_map(
@@ -133,9 +137,18 @@ def get_repo_map(
     result = handle_get_repo_map(req)
     return result.model_dump()
 
+
 @mcp.tool()
 def write_file(path: str, content: str, create_dirs: bool = True) -> dict:
     """Write a file in a single call when writes are enabled."""
     req = WriteFileRequest(path=path, content=content, create_dirs=create_dirs)
     result = handle_write_file(req)
+    return result.model_dump()
+
+
+@mcp.tool()
+def delete_file(path: str, missing_ok: bool = False) -> dict:
+    """Safely delete a file from the workspace."""
+    req = DeleteFileRequest(path=path, missing_ok=missing_ok)
+    result = handle_delete_file(req)
     return result.model_dump()

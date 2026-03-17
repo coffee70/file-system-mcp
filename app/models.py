@@ -142,3 +142,16 @@ class WriteFileResponse(BaseModel):
     bytes_written: int
     line_count: int
     sha256: str
+
+
+class DeleteFileRequest(BaseModel):
+    path: str
+    missing_ok: bool = False
+
+
+class DeleteFileResponse(BaseModel):
+    path: str
+    deleted: bool
+    existed: bool
+    bytes_removed: int
+    sha256_before_delete: Optional[str] = None

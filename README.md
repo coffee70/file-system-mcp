@@ -12,6 +12,7 @@ Tools include:
 - propose_patch
 - apply_patch
 - write_file
+- delete_file
 
 This server is designed to run locally and be exposed through a tunnel (e.g., Cloudflare Tunnel or ngrok) so ChatGPT can access it.
 
@@ -25,6 +26,10 @@ For reliable edits use the one-shot write tool:
 4. Optionally verify with `read_file`
 
 Patch tools (`propose_patch`, `apply_patch`) are kept for diff previews and advanced patch workflows, but `write_file` should be the primary editing mechanism for reliability.
+
+## File Deletion
+
+Use the `delete_file` tool to safely remove files from the workspace. The tool validates paths, respects the workspace root, and returns metadata about the removed file including its SHA256 and byte size.
 
 ## Requirements
 
@@ -111,3 +116,4 @@ ChatGPT will automatically discover the tools:
 - propose_patch
 - apply_patch
 - write_file
+- delete_file
