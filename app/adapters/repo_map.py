@@ -95,12 +95,12 @@ IMPORTANT_FILE_NAMES = {
     "requirements.txt",
     "Makefile",
     ".env.example",
+    "mcp_server.py",
 }
 
 ENTRYPOINT_FILE_NAMES = {
     "main.py",
     "app.py",
-    "server.py",
     "manage.py",
     "index.js",
     "index.ts",
@@ -119,6 +119,7 @@ FRAMEWORK_DEPENDENCY_MAP = {
     "uvicorn": "uvicorn",
     "typer": "typer",
     "click": "click",
+    "mcp": "mcp",
 }
 
 
@@ -156,7 +157,7 @@ def _is_test_path(path: Path) -> bool:
 def _is_important_file(path: Path) -> bool:
     if path.name in IMPORTANT_FILE_NAMES:
         return True
-    return path.as_posix() in {"app/main.py", "src/main.py", "main.py"}
+    return path.as_posix() in {"app/main.py", "app/mcp_server.py", "src/main.py", "main.py"}
 
 
 def _read_text_preview(path: Path, limit: int = 4000) -> str:
@@ -172,7 +173,7 @@ def _is_entrypoint_candidate(path: Path, full_path: Path) -> bool:
     if path.name in ENTRYPOINT_FILE_NAMES:
         return True
 
-    if posix_path in {"app/main.py", "src/main.py"}:
+    if posix_path in {"app/main.py", "app/mcp_server.py", "src/main.py"}:
         return True
 
     if path.parts and path.parts[0] == "scripts":
@@ -185,6 +186,7 @@ def _is_entrypoint_candidate(path: Path, full_path: Path) -> bool:
             or "if __name__ == '__main__':" in preview
             or "FastAPI(" in preview
             or "uvicorn.run(" in preview
+            or "FastMCP(" in preview
         ):
             return True
 
@@ -228,13 +230,15 @@ def _collect_frameworks(root: Path) -> list[str]:
 
     likely_files = [
         root / "app" / "main.py",
+        root / "app" / "mcp_server.py",
         root / "main.py",
-        root / "server.py",
     ]
     for file_path in likely_files:
         if not file_path.exists():
             continue
         preview = _read_text_preview(file_path).lower()
+        if "fastmcp(" in preview or "from mcp.server" in preview:
+            frameworks.add("mcp")
         if "fastapi(" in preview or "from fastapi" in preview:
             frameworks.add("fastapi")
         if "import pytest" in preview or "from pytest" in preview:

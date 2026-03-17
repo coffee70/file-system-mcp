@@ -155,3 +155,50 @@ class DeleteFileResponse(BaseModel):
     existed: bool
     bytes_removed: int
     sha256_before_delete: Optional[str] = None
+
+
+class CopyFileRequest(BaseModel):
+    src: str
+    dst: str
+    overwrite: bool = False
+    create_dirs: bool = True
+
+
+class CopyFileResponse(BaseModel):
+    src: str
+    dst: str
+    copied: bool
+    created: bool
+    bytes_copied: int
+    sha256: str
+
+
+class MoveFileRequest(BaseModel):
+    src: str
+    dst: str
+    overwrite: bool = False
+    create_dirs: bool = True
+
+
+class MoveFileResponse(BaseModel):
+    src: str
+    dst: str
+    moved: bool
+    destination_created: bool
+    bytes_moved: int
+    sha256: str
+
+
+class DeleteDirRequest(BaseModel):
+    path: str
+    recursive: bool = False
+    missing_ok: bool = False
+    max_depth: int = Field(default=3, ge=0, le=20)
+
+
+class DeleteDirResponse(BaseModel):
+    path: str
+    deleted: bool
+    existed: bool
+    recursive: bool
+    items_removed: int

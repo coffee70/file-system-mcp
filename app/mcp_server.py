@@ -13,6 +13,9 @@ from .models import (
     GetRepoMapRequest,
     WriteFileRequest,
     DeleteFileRequest,
+    CopyFileRequest,
+    MoveFileRequest,
+    DeleteDirRequest,
 )
 from .tools.list_dir import handle_list_dir
 from .tools.read_file import handle_read_file
@@ -25,6 +28,9 @@ from .tools.git_command import handle_git_command
 from .tools.get_repo_map import handle_get_repo_map
 from .tools.write_file import handle_write_file
 from .tools.delete_file import handle_delete_file
+from .tools.copy_file import handle_copy_file
+from .tools.move_file import handle_move_file
+from .tools.delete_dir import handle_delete_dir
 
 
 mcp = FastMCP(
@@ -151,4 +157,38 @@ def delete_file(path: str, missing_ok: bool = False) -> dict:
     """Safely delete a file from the workspace."""
     req = DeleteFileRequest(path=path, missing_ok=missing_ok)
     result = handle_delete_file(req)
+    return result.model_dump()
+
+
+@mcp.tool()
+def delete_dir(
+    path: str,
+    recursive: bool = False,
+    missing_ok: bool = False,
+    max_depth: int = 3,
+) -> dict:
+    """Safely delete a directory from the workspace."""
+    req = DeleteDirRequest(
+        path=path,
+        recursive=recursive,
+        missing_ok=missing_ok,
+        max_depth=max_depth,
+    )
+    result = handle_delete_dir(req)
+    return result.model_dump()
+
+
+@mcp.tool()
+def copy_file(src: str, dst: str, overwrite: bool = False, create_dirs: bool = True) -> dict:
+    """Copy a file inside the workspace."""
+    req = CopyFileRequest(src=src, dst=dst, overwrite=overwrite, create_dirs=create_dirs)
+    result = handle_copy_file(req)
+    return result.model_dump()
+
+
+@mcp.tool()
+def move_file(src: str, dst: str, overwrite: bool = False, create_dirs: bool = True) -> dict:
+    """Move or rename a file inside the workspace."""
+    req = MoveFileRequest(src=src, dst=dst, overwrite=overwrite, create_dirs=create_dirs)
+    result = handle_move_file(req)
     return result.model_dump()
