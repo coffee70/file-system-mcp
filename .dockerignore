@@ -1,0 +1,40 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Git
+.git
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Tests (not needed in runtime image)
+tests/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Environment files
+.env
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/

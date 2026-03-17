@@ -1,0 +1,1 @@
+"""Test package for mcp-code-assistant."""

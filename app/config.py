@@ -1,0 +1,33 @@
+from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def _get_env_bool(name: str, default: bool = False) -> bool:
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    return val.lower() in ("1", "true", "yes", "on")
+
+
+def _get_env_int(name: str, default: int) -> int:
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    try:
+        return int(val)
+    except ValueError:
+        return default
+
+
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", ".")).resolve()
+
+ENABLE_WRITES = _get_env_bool("ENABLE_WRITES", False)
+
+MAX_READ_LINES = _get_env_int("MAX_READ_LINES", 400)
+MAX_RESULTS = _get_env_int("MAX_RESULTS", 200)
+SUBPROCESS_TIMEOUT_SEC = _get_env_int("SUBPROCESS_TIMEOUT_SEC", 5)
+
+MAX_FILE_SIZE_BYTES = _get_env_int("MAX_FILE_SIZE_BYTES", 1_000_000)

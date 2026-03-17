@@ -1,0 +1,1 @@
+"""mcp-code-assistant application package."""

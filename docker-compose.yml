@@ -1,0 +1,11 @@
+services:
+  mcp-code-assistant:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      WORKSPACE_ROOT: /workspace
+      ENABLE_WRITES: "false"
+    volumes:
+      - ${HOST_REPO_PATH:-.}:/workspace
+    restart: unless-stopped
