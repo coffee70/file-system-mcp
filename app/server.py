@@ -11,6 +11,7 @@ from .models import (
     ProposePatchRequest,
     ApplyPatchRequest,
     GetRepoMapRequest,
+    WriteFileRequest,
 )
 from .tools.list_dir import handle_list_dir
 from .tools.read_file import handle_read_file
@@ -20,6 +21,7 @@ from .tools.ast_grep_search import handle_ast_grep_search
 from .tools.propose_patch import handle_propose_patch
 from .tools.apply_patch import handle_apply_patch
 from .tools.get_repo_map import handle_get_repo_map
+from .tools.write_file import handle_write_file
 
 app = FastAPI(title="MCP Code Assistant")
 
@@ -96,6 +98,15 @@ def apply_patch(req: ApplyPatchRequest):
 def get_repo_map(req: GetRepoMapRequest):
     try:
         result = handle_get_repo_map(req)
+        return JSONResponse(content=json.loads(result.model_dump_json()))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+
+@app.post("/tools/write_file")
+def write_file(req: WriteFileRequest):
+    try:
+        result = handle_write_file(req)
         return JSONResponse(content=json.loads(result.model_dump_json()))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

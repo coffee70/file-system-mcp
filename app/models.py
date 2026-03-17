@@ -127,3 +127,15 @@ class GetRepoMapResponse(BaseModel):
     important_files: List[str]
     top_level_dirs: Dict[str, RepoMapDirSummary]
     summary: str
+
+
+class WriteFileRequest(BaseModel):
+    path: str
+    content: str
+    create_dirs: bool = True
+
+
+class WriteFileResponse(BaseModel):
+    path: str
+    written: bool
+    bytes_written: int

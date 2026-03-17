@@ -11,6 +11,7 @@ from .models import (
     ApplyPatchRequest,
     GitCommandRequest,
     GetRepoMapRequest,
+    WriteFileRequest,
 )
 from .tools.list_dir import handle_list_dir
 from .tools.read_file import handle_read_file
@@ -21,6 +22,7 @@ from .tools.propose_patch import handle_propose_patch
 from .tools.apply_patch import handle_apply_patch
 from .tools.git_command import handle_git_command
 from .tools.get_repo_map import handle_get_repo_map
+from .tools.write_file import handle_write_file
 
 
 mcp = FastMCP(
@@ -129,4 +131,11 @@ def get_repo_map(
         max_entries_per_dir=max_entries_per_dir,
     )
     result = handle_get_repo_map(req)
+    return result.model_dump()
+
+@mcp.tool()
+def write_file(path: str, content: str, create_dirs: bool = True) -> dict:
+    """Write a file in a single call when writes are enabled."""
+    req = WriteFileRequest(path=path, content=content, create_dirs=create_dirs)
+    result = handle_write_file(req)
     return result.model_dump()
