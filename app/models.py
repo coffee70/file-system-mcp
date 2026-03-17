@@ -1,6 +1,5 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
-
 
 class ListDirRequest(BaseModel):
     path: str = Field(default=".")
@@ -105,3 +104,26 @@ class GitCommandResponse(BaseModel):
     returncode: int
     stdout: str
     stderr: str
+
+
+class RepoMapDirSummary(BaseModel):
+    kind: str
+    children: List[str]
+
+
+class GetRepoMapRequest(BaseModel):
+    path: str = Field(default=".")
+    max_depth: int = Field(default=2, ge=0, le=8)
+    max_entries_per_dir: int = Field(default=20, ge=1, le=200)
+
+
+class GetRepoMapResponse(BaseModel):
+    root: str
+    languages: List[str]
+    frameworks: List[str]
+    entrypoints: List[str]
+    tests: List[str]
+    configs: List[str]
+    important_files: List[str]
+    top_level_dirs: Dict[str, RepoMapDirSummary]
+    summary: str

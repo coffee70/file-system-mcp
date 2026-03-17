@@ -10,6 +10,7 @@ from .models import (
     AstGrepSearchRequest,
     ProposePatchRequest,
     ApplyPatchRequest,
+    GetRepoMapRequest,
 )
 from .tools.list_dir import handle_list_dir
 from .tools.read_file import handle_read_file
@@ -18,6 +19,7 @@ from .tools.ripgrep_search import handle_ripgrep_search
 from .tools.ast_grep_search import handle_ast_grep_search
 from .tools.propose_patch import handle_propose_patch
 from .tools.apply_patch import handle_apply_patch
+from .tools.get_repo_map import handle_get_repo_map
 
 app = FastAPI(title="MCP Code Assistant")
 
@@ -85,6 +87,15 @@ def propose_patch(req: ProposePatchRequest):
 def apply_patch(req: ApplyPatchRequest):
     try:
         result = handle_apply_patch(req)
+        return JSONResponse(content=json.loads(result.model_dump_json()))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+
+@app.post("/tools/get_repo_map")
+def get_repo_map(req: GetRepoMapRequest):
+    try:
+        result = handle_get_repo_map(req)
         return JSONResponse(content=json.loads(result.model_dump_json()))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

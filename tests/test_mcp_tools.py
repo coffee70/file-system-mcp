@@ -3,7 +3,7 @@ from importlib import reload
 import app.config
 import app.tools.apply_patch as apply_patch_module
 import app.tools.propose_patch as propose_patch_module
-from app.mcp_server import list_dir, read_file
+from app.mcp_server import list_dir, read_file, get_repo_map
 
 
 def test_mcp_list_dir(tmp_path, monkeypatch):
@@ -70,3 +70,11 @@ def test_apply_patch_creates_new_file(tmp_path, monkeypatch):
 
     assert result.applied is True
     assert (tmp_path / "newfile.txt").read_text() == "hello\nworld\n"
+
+
+def test_get_repo_map_tool():
+    result = get_repo_map()
+
+    assert result["root"] == "."
+    assert "python" in result["languages"]
+    assert "app" in result["top_level_dirs"]

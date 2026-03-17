@@ -10,6 +10,7 @@ from .models import (
     ProposePatchRequest,
     ApplyPatchRequest,
     GitCommandRequest,
+    GetRepoMapRequest,
 )
 from .tools.list_dir import handle_list_dir
 from .tools.read_file import handle_read_file
@@ -19,6 +20,7 @@ from .tools.ast_grep_search import handle_ast_grep_search
 from .tools.propose_patch import handle_propose_patch
 from .tools.apply_patch import handle_apply_patch
 from .tools.git_command import handle_git_command
+from .tools.get_repo_map import handle_get_repo_map
 
 
 mcp = FastMCP(
@@ -112,4 +114,19 @@ def git_command(command: str, args: list[str] | None = None) -> dict:
     """Run a git command inside the workspace repository."""
     req = GitCommandRequest(command=command, args=args)
     result = handle_git_command(req)
+    return result.model_dump()
+
+@mcp.tool()
+def get_repo_map(
+    path: str = ".",
+    max_depth: int = 2,
+    max_entries_per_dir: int = 20,
+) -> dict:
+    """Return a compact architectural map of the repository."""
+    req = GetRepoMapRequest(
+        path=path,
+        max_depth=max_depth,
+        max_entries_per_dir=max_entries_per_dir,
+    )
+    result = handle_get_repo_map(req)
     return result.model_dump()
