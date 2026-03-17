@@ -138,4 +138,7 @@ class WriteFileRequest(BaseModel):
 class WriteFileResponse(BaseModel):
     path: str
     written: bool
+    created: bool
     bytes_written: int
+    line_count: int
+    sha256: str

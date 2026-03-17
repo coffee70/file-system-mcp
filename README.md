@@ -11,8 +11,20 @@ Tools include:
 - ast_grep_search
 - propose_patch
 - apply_patch
+- write_file
 
 This server is designed to run locally and be exposed through a tunnel (e.g., Cloudflare Tunnel or ngrok) so ChatGPT can access it.
+
+## Recommended Editing Flow
+
+For reliable edits use the one-shot write tool:
+
+1. Read the file
+2. Generate the updated full file contents
+3. Write the file using `write_file`
+4. Optionally verify with `read_file`
+
+Patch tools (`propose_patch`, `apply_patch`) are kept for diff previews and advanced patch workflows, but `write_file` should be the primary editing mechanism for reliability.
 
 ## Requirements
 
@@ -98,3 +110,4 @@ ChatGPT will automatically discover the tools:
 - ast_grep_search
 - propose_patch
 - apply_patch
+- write_file
