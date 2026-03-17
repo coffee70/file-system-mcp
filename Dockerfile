@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     ripgrep \
     git \
+    docker.io \
+    docker-compose-plugin \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git config --global user.name "$GIT_USER_NAME" \
@@ -21,6 +23,7 @@ RUN git config --global user.name "$GIT_USER_NAME" \
 COPY pyproject.toml README.md ./
 COPY app ./app
 COPY scripts ./scripts
+COPY README.md /workspace/README.md
 
 RUN pip install --no-cache-dir -e . && \
     pip install --no-cache-dir ast-grep-cli && \

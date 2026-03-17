@@ -33,4 +33,10 @@ SUBPROCESS_TIMEOUT_SEC = _get_env_int("SUBPROCESS_TIMEOUT_SEC", 5)
 RUN_COMMAND_MAX_TIMEOUT_SEC = _get_env_int("RUN_COMMAND_MAX_TIMEOUT_SEC", 30)
 RUN_COMMAND_MAX_OUTPUT_CHARS = _get_env_int("RUN_COMMAND_MAX_OUTPUT_CHARS", 40_000)
 
+# Docker integration
+DOCKER_HOST = os.environ.get("DOCKER_HOST", "unix:///var/run/docker.sock")
+
+# Optional safety limits for docker commands
+DOCKER_COMMAND_TIMEOUT_SEC = int(os.environ.get("DOCKER_COMMAND_TIMEOUT_SEC", "120"))
+
 MAX_FILE_SIZE_BYTES = _get_env_int("MAX_FILE_SIZE_BYTES", 1_000_000)

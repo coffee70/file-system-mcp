@@ -117,3 +117,10 @@ ChatGPT will automatically discover the tools:
 - apply_patch
 - write_file
 - delete_file
+
+## Docker Support
+
+The MCP server runs inside a container but can control other containers by
+connecting to the Docker daemon through the **Docker socket**.
+
+The socket is mounted into the MCP container:

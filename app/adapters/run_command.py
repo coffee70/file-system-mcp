@@ -13,6 +13,8 @@ from ..config import (
 
 ALLOWED_COMMANDS = {
     "cat",
+    "docker",
+    "docker-compose",
     "echo",
     "find",
     "grep",
@@ -41,6 +43,51 @@ ALLOWED_COMMANDS = {
     "which",
 }
 
+DOCKER_ALLOWED_SUBCOMMANDS = {
+    "version",
+    "info",
+    "ps",
+    "images",
+    "logs",
+    "inspect",
+    "exec",
+    "cp",
+    "port",
+    "stats",
+    "top",
+    "events",
+    "network",
+    "volume",
+    "compose",
+}
+
+DOCKER_COMPOSE_ALLOWED_SUBCOMMANDS = {
+    "version",
+    "ls",
+    "ps",
+    "logs",
+    "config",
+    "up",
+    "down",
+    "restart",
+    "start",
+    "stop",
+    "exec",
+    "run",
+    "pull",
+    "build",
+}
+
+DOCKER_NETWORK_ALLOWED_SUBCOMMANDS = {
+    "ls",
+    "inspect",
+}
+
+DOCKER_VOLUME_ALLOWED_SUBCOMMANDS = {
+    "ls",
+    "inspect",
+}
+
 
 def _truncate(text: str) -> str:
     limit = RUN_COMMAND_MAX_OUTPUT_CHARS
@@ -65,9 +112,50 @@ def _validate_workspace_path(candidate: str) -> Path:
     return p
 
 
+def _validate_docker_policy(command: str, args: list[str]):
+    if not args:
+        raise ValueError(f"{command} requires subcommand")
+
+    if command == "docker-compose":
+        if args[0] not in DOCKER_COMPOSE_ALLOWED_SUBCOMMANDS:
+            raise ValueError("docker-compose subcommand not allowed")
+        return
+
+    top = args[0]
+    if top not in DOCKER_ALLOWED_SUBCOMMANDS:
+        raise ValueError("docker subcommand not allowed")
+
+    if top == "compose":
+        if len(args) < 2:
+            raise ValueError("docker compose requires subcommand")
+        if args[1] not in DOCKER_COMPOSE_ALLOWED_SUBCOMMANDS:
+            raise ValueError("docker compose subcommand not allowed")
+        return
+
+    if top == "network":
+        if len(args) < 2:
+            raise ValueError("docker network requires subcommand")
+        if args[1] not in DOCKER_NETWORK_ALLOWED_SUBCOMMANDS:
+            raise ValueError("docker network subcommand not allowed")
+        return
+
+    if top == "volume":
+        if len(args) < 2:
+            raise ValueError("docker volume requires subcommand")
+        if args[1] not in DOCKER_VOLUME_ALLOWED_SUBCOMMANDS:
+            raise ValueError("docker volume subcommand not allowed")
+        return
+
+
 def _validate_command_policy(command: str, args: list[str]):
     if command not in ALLOWED_COMMANDS:
         raise ValueError(f"command not allowed: {command}")
+
+    if command == "docker":
+        _validate_docker_policy(command, args)
+
+    if command == "docker-compose":
+        _validate_docker_policy(command, args)
 
     if command == "npm":
         if not args:
@@ -122,6 +210,7 @@ def run_command(command: str, args: list[str], cwd: str, timeout_seconds: int | 
         "PYTHONUNBUFFERED": "1",
         "CI": "1",
         "NO_COLOR": "1",
+        "DOCKER_HOST": os.environ.get("DOCKER_HOST", "unix:///var/run/docker.sock"),
     }
 
     start = time.monotonic()
