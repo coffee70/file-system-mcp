@@ -12,15 +12,17 @@ def generate_unified_diff(original: str, modified: str, path: str) -> str:
     original_lines = original.splitlines(keepends=True)
     modified_lines = modified.splitlines(keepends=True)
 
-    diff = difflib.unified_diff(
-        original_lines,
-        modified_lines,
-        fromfile=f"a/{path}",
-        tofile=f"b/{path}",
-        lineterm="",
+    diff_lines = list(
+        difflib.unified_diff(
+            original_lines,
+            modified_lines,
+            fromfile=f"a/{path}",
+            tofile=f"b/{path}",
+            lineterm="\n",  # ensure each diff line ends with newline
+        )
     )
 
-    return "\n".join(diff) + ("\n" if original != modified else "")
+    return "".join(diff_lines)
 
 
 def apply_unified_patch(original: str, diff_text: str) -> str:
