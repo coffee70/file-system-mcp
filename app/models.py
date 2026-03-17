@@ -93,3 +93,15 @@ class ApplyPatchRequest(BaseModel):
 class ApplyPatchResponse(BaseModel):
     path: str
     applied: bool
+
+
+class GitCommandRequest(BaseModel):
+    command: str
+    args: Optional[List[str]] = None
+
+
+class GitCommandResponse(BaseModel):
+    command: str
+    returncode: int
+    stdout: str
+    stderr: str

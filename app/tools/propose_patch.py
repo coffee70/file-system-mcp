@@ -25,11 +25,20 @@ def _apply_simple_instruction(original: str, instruction: str) -> str:
 
     if instruction.startswith("append:"):
         addition = instruction[len("append:"):].lstrip()
-        if not text.endswith("\n") and text:
-            text += "\n"
-        text += addition
+
+        # ensure file ends with newline
         if text and not text.endswith("\n"):
             text += "\n"
+
+        # ensure a blank line before appended content
+        if text and not text.endswith("\n\n"):
+            text += "\n"
+
+        text += addition
+
+        if not text.endswith("\n"):
+            text += "\n"
+
         return text
 
     if instruction.startswith("prepend:"):

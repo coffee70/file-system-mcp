@@ -22,7 +22,14 @@ def generate_unified_diff(original: str, modified: str, path: str) -> str:
         )
     )
 
-    return "".join(diff_lines)
+    # ensure every diff line ends with a newline
+    normalized = []
+    for line in diff_lines:
+        if not line.endswith("\n"):
+            line = line + "\n"
+        normalized.append(line)
+
+    return "".join(normalized)
 
 
 def apply_unified_patch(original: str, diff_text: str) -> str:
@@ -84,7 +91,7 @@ def apply_unified_patch(original: str, diff_text: str) -> str:
             if prefix == " ":
                 if src_index >= len(original_lines):
                     raise ValueError("Patch context exceeds original content.")
-                if original_lines[src_index] != content:
+                if original_lines[src_index].rstrip("\n") != content.rstrip("\n"):
                     raise ValueError(
                         "Patch context mismatch.\n"
                         f"Expected: {original_lines[src_index]!r}\n"
@@ -97,7 +104,7 @@ def apply_unified_patch(original: str, diff_text: str) -> str:
             elif prefix == "-":
                 if src_index >= len(original_lines):
                     raise ValueError("Patch removal exceeds original content.")
-                if original_lines[src_index] != content:
+                if original_lines[src_index].rstrip("\n") != content.rstrip("\n"):
                     raise ValueError(
                         "Patch removal mismatch.\n"
                         f"Expected: {original_lines[src_index]!r}\n"

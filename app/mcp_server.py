@@ -9,6 +9,7 @@ from .models import (
     AstGrepSearchRequest,
     ProposePatchRequest,
     ApplyPatchRequest,
+    GitCommandRequest,
 )
 from .tools.list_dir import handle_list_dir
 from .tools.read_file import handle_read_file
@@ -17,6 +18,7 @@ from .tools.ripgrep_search import handle_ripgrep_search
 from .tools.ast_grep_search import handle_ast_grep_search
 from .tools.propose_patch import handle_propose_patch
 from .tools.apply_patch import handle_apply_patch
+from .tools.git_command import handle_git_command
 
 
 mcp = FastMCP(
@@ -103,4 +105,11 @@ def apply_patch(path: str, diff: str) -> dict:
     """Apply a unified diff patch to a file when writes are enabled."""
     req = ApplyPatchRequest(path=path, diff=diff)
     result = handle_apply_patch(req)
+    return result.model_dump()
+
+@mcp.tool()
+def git_command(command: str, args: list[str] | None = None) -> dict:
+    """Run a git command inside the workspace repository."""
+    req = GitCommandRequest(command=command, args=args)
+    result = handle_git_command(req)
     return result.model_dump()
