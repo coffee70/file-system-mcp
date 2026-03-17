@@ -12,6 +12,15 @@ from ..config import (
 )
 
 ALLOWED_COMMANDS = {
+    "cat",
+    "echo",
+    "find",
+    "grep",
+    "head",
+    "ls",
+    "mkdir",
+    "node",
+    "pwd",
     "python",
     "python3",
     "pytest",
@@ -26,6 +35,10 @@ ALLOWED_COMMANDS = {
     "mypy",
     "rg",
     "git",
+    "sed",
+    "tail",
+    "touch",
+    "which",
 }
 
 
