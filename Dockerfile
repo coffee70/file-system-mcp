@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+ARG GIT_USER_NAME="MCP Code Assistant"
+ARG GIT_USER_EMAIL="mcp@local.dev"
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
@@ -9,7 +12,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     ripgrep \
+    git \
     && rm -rf /var/lib/apt/lists/*
+
+RUN git config --global user.name "$GIT_USER_NAME" \
+    && git config --global user.email "$GIT_USER_EMAIL"
 
 COPY pyproject.toml README.md ./
 COPY app ./app
