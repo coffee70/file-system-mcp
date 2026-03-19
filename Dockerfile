@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ripgrep \
     git \
     docker.io \
-    docker-compose-plugin \
+    docker-compose \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git config --global user.name "$GIT_USER_NAME" \
