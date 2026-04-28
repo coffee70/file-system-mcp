@@ -4,10 +4,11 @@ from ..config import ENABLE_WRITES
 from ..models import DeleteFileRequest, DeleteFileResponse
 from ..security import resolve_user_path
 
-# Files that should never be deleted by agents
+# Files that should never be deleted by agents. Docker runtime artifacts are no
+# longer protected because this server is host-native and does not depend on
+# them.
 PROTECTED_FILES = {
     "pyproject.toml",
-    "Dockerfile",
     ".env",
     ".gitignore",
 }

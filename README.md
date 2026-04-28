@@ -1,126 +1,121 @@
-# MCP Code Assistant
+# MCP Code Assistant (Host-Native)
 
-A local code-search MCP-style server that exposes safe tools for interacting with a code repository.
+A host-native MCP server that runs directly on your machine and exposes safe, structured tools for interacting with your codebase and development environment.
 
-Tools include:
+## Key Architecture
 
-- list_dir
-- read_file
-- read_files
-- ripgrep_search
-- ast_grep_search
-- propose_patch
-- apply_patch
-- write_file
-- delete_file
+This server runs **directly on the host (Codex-style)**:
 
-This server is designed to run locally and be exposed through a tunnel (e.g., Cloudflare Tunnel or ngrok) so ChatGPT can access it.
+- Full access to host filesystem (workspace-scoped)
+- Access to host processes (`ps`)
+- Access to host networking (`ss`, `netstat`)
+- Uses host-installed binaries (git, rg, pytest, etc.)
+- Optional access to Docker via host CLI
 
-## Recommended Editing Flow
+There is **no container boundary**. Safety is enforced in code.
 
-For reliable edits use the one-shot write tool:
-
-1. Read the file
-2. Generate the updated full file contents
-3. Write the file using `write_file`
-4. Optionally verify with `read_file`
-
-Patch tools (`propose_patch`, `apply_patch`) are kept for diff previews and advanced patch workflows, but `write_file` should be the primary editing mechanism for reliability.
-
-## File Deletion
-
-Use the `delete_file` tool to safely remove files from the workspace. The tool validates paths, respects the workspace root, and returns metadata about the removed file including its SHA256 and byte size.
+---
 
 ## Requirements
 
-Install:
+Install the following on your host:
 
 - Python 3.11+
 - ripgrep (`rg`)
 - ast-grep
+- git
+- Optional: Docker (for docker tools)
 
-Example macOS install:
+System utilities required:
+
+- ps
+- ss or netstat
+- df
+- tail
+
+Example (macOS):
 
 ```bash
 brew install ripgrep ast-grep
 ```
 
-## Run the MCP Server
+---
 
-Option 1 — Using the helper script:
+## Running the Server
+
+### Option 1 — Helper script
 
 ```bash
 bash scripts/run_local.sh
 ```
 
-Option 2 — Run directly with uvicorn:
+### Option 2 — Direct
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Server runs on:
+Server:
 
 ```
 http://localhost:8000
 ```
 
-The MCP endpoint is:
+MCP endpoint:
 
 ```
 http://localhost:8000/mcp
 ```
 
-## Exposing to ChatGPT
+---
 
-Expose the MCP endpoint through a tunnel.
+## Safety Model
 
-### Cloudflare Tunnel
+Since this runs on your host, safety is enforced by:
 
-```bash
-cloudflared tunnel --url http://localhost:8000
-```
+- Command allowlist (`run_command`)
+- Argument validation (no shell injection)
+- `shell=False` everywhere
+- Workspace path confinement
+- Output truncation
+- Timeouts
+- Secret redaction (env inspection)
 
-### ngrok
+You are responsible for trusting the client using this server.
 
-```bash
-ngrok http 8000
-```
+---
 
-Your MCP endpoint will be:
+## Docker Tools (Optional)
 
-```
-https://your-tunnel-url/mcp
-```
+Docker tools are still available but assume:
 
-## Connecting in ChatGPT
+- Docker CLI is installed on host
+- Docker daemon is running
 
-1. Enable **Developer Mode**
-2. Go to **Settings → Apps & Connectors**
-3. Click **Create App**
-4. Enter your MCP endpoint:
+No container mounting or docker.sock tricks are used.
 
-```
-https://your-tunnel-url/mcp
-```
+---
 
-5. Save and start a new chat.
-
-ChatGPT will automatically discover the tools:
+## Example Tools
 
 - list_dir
 - read_file
-- read_files
 - ripgrep_search
 - ast_grep_search
-- propose_patch
-- apply_patch
-- write_file
-- delete_file
+- run_command
+- docker_exec_*
+- host_ps / host_ports / host_env
 
-## Docker Support
+---
 
-The MCP server runs inside a container but can control other containers by
-connecting to the Docker daemon through the **Docker socket**.
+## Notes
 
-The socket is mounted into the MCP container:
+- Missing binaries will return helpful errors
+- Return code 127 indicates missing command
+- Prefer `write_file` over patching tools for edits
+
+---
+
+## Legacy Docker Mode (Optional)
+
+You can still run this inside Docker if you choose, but it is no longer the primary or recommended mode.

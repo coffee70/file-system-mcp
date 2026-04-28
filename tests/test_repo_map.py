@@ -19,4 +19,4 @@ def test_build_repo_map_detects_entrypoints():
     result = build_repo_map(".", max_depth=2, max_entries_per_dir=20)
 
     assert "app/main.py" in result["entrypoints"]
-    assert "Dockerfile" in result["entrypoints"]
+    # Dockerfile removed in host-native mode

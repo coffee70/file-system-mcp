@@ -78,14 +78,12 @@ DOCKER_COMPOSE_ALLOWED_SUBCOMMANDS = {
     "build",
 }
 
-DOCKER_NETWORK_ALLOWED_SUBCOMMANDS = {
-    "ls",
-    "inspect",
-}
-
-DOCKER_VOLUME_ALLOWED_SUBCOMMANDS = {
-    "ls",
-    "inspect",
+DOCKER_NETWORK_ALLOWED_SUBCOMMANDS = {"ls", "inspect"}
+DOCKER_VOLUME_ALLOWED_SUBCOMMANDS = {"ls", "inspect"}
+DESTRUCTIVE_COMMANDS = {
+    ("docker", "compose", "down"),
+    ("docker-compose", "down"),
+    ("docker", "volume"),
 }
 
 
@@ -112,7 +110,23 @@ def _validate_workspace_path(candidate: str) -> Path:
     return p
 
 
-def _validate_docker_policy(command: str, args: list[str]):
+def _host_env() -> dict[str, str]:
+    """Return a host-derived subprocess environment.
+
+    Host-native mode relies on the user's PATH, HOME, language manager shims,
+    Docker settings, and developer-tool environment. We therefore inherit the
+    full host environment and only add deterministic defaults. Safety is handled
+    by command allowlists, argument validation, workspace confinement, timeouts,
+    and shell=False rather than by stripping environment variables.
+    """
+    env = dict(os.environ)
+    env.setdefault("PYTHONUNBUFFERED", "1")
+    env.setdefault("CI", "1")
+    env.setdefault("NO_COLOR", "1")
+    return env
+
+
+def _validate_docker_policy(command: str, args: list[str]) -> None:
     if not args:
         raise ValueError(f"{command} requires subcommand")
 
@@ -147,14 +161,11 @@ def _validate_docker_policy(command: str, args: list[str]):
         return
 
 
-def _validate_command_policy(command: str, args: list[str]):
+def _validate_command_policy(command: str, args: list[str]) -> None:
     if command not in ALLOWED_COMMANDS:
         raise ValueError(f"command not allowed: {command}")
 
-    if command == "docker":
-        _validate_docker_policy(command, args)
-
-    if command == "docker-compose":
+    if command in {"docker", "docker-compose"}:
         _validate_docker_policy(command, args)
 
     if command == "npm":
@@ -175,21 +186,27 @@ def _validate_command_policy(command: str, args: list[str]):
         if args[0] not in {"test", "run", "exec", "list"}:
             raise ValueError("yarn subcommand not allowed")
 
-    if command == "npx":
-        if "--no-install" not in args:
-            raise ValueError("npx requires --no-install flag")
+    if command == "npx" and "--no-install" not in args:
+        raise ValueError("npx requires --no-install flag")
 
-    if command == "uv":
-        if not args or args[0] not in {"run", "tool"}:
-            raise ValueError("uv subcommand not allowed")
+    if command == "uv" and (not args or args[0] not in {"run", "tool"}):
+        raise ValueError("uv subcommand not allowed")
 
-    if command == "poetry":
-        if not args or args[0] not in {"run", "show"}:
-            raise ValueError("poetry subcommand not allowed")
+    if command == "poetry" and (not args or args[0] not in {"run", "show"}):
+        raise ValueError("poetry subcommand not allowed")
 
-    if command == "pipenv":
-        if not args or args[0] not in {"run", "graph"}:
-            raise ValueError("pipenv subcommand not allowed")
+    if command == "pipenv" and (not args or args[0] not in {"run", "graph"}):
+        raise ValueError("pipenv subcommand not allowed")
+
+
+def _warnings_for_command(command: str, args: list[str]) -> list[str]:
+    warnings: list[str] = []
+    command_tuple = tuple([command] + args[:2])
+    if any(command_tuple[: len(candidate)] == candidate for candidate in DESTRUCTIVE_COMMANDS):
+        warnings.append(
+            "Command may be destructive in host-native mode; verify it targets the intended project/resources."
+        )
+    return warnings
 
 
 def run_command(command: str, args: list[str], cwd: str, timeout_seconds: int | None):
@@ -197,35 +214,40 @@ def run_command(command: str, args: list[str], cwd: str, timeout_seconds: int | 
         raise PermissionError("run_command tool disabled")
 
     _validate_command_policy(command, args)
-
     cwd_path = _validate_workspace_path(cwd)
 
     timeout = timeout_seconds or RUN_COMMAND_MAX_TIMEOUT_SEC
     timeout = min(timeout, RUN_COMMAND_MAX_TIMEOUT_SEC)
 
     argv = [command] + args
-
-    env = {
-        "PATH": os.environ.get("PATH", ""),
-        "PYTHONUNBUFFERED": "1",
-        "CI": "1",
-        "NO_COLOR": "1",
-        "DOCKER_HOST": os.environ.get("DOCKER_HOST", "unix:///var/run/docker.sock"),
-    }
-
+    warnings = _warnings_for_command(command, args)
     start = time.monotonic()
 
-    proc = subprocess.Popen(
-        argv,
-        cwd=str(cwd_path),
-        env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        shell=False,
-        start_new_session=True,
-    )
+    try:
+        proc = subprocess.Popen(
+            argv,
+            cwd=str(cwd_path),
+            env=_host_env(),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            shell=False,
+            start_new_session=True,
+        )
+    except FileNotFoundError as exc:
+        duration_ms = int((time.monotonic() - start) * 1000)
+        return {
+            "ok": False,
+            "command": argv,
+            "cwd": str(cwd_path.relative_to(WORKSPACE_ROOT)),
+            "returncode": 127,
+            "stdout": "",
+            "stderr": f"Executable not found: {command}. Ensure it is installed and on PATH. ({exc})",
+            "timed_out": False,
+            "duration_ms": duration_ms,
+            "warnings": warnings,
+        }
 
     timed_out = False
 
@@ -241,6 +263,9 @@ def run_command(command: str, args: list[str], cwd: str, timeout_seconds: int | 
     stdout = _truncate(stdout or "")
     stderr = _truncate(stderr or "")
 
+    if proc.returncode == 127:
+        stderr += "\nHint: command not found. Install the required binary on the host."
+
     return {
         "ok": proc.returncode == 0 and not timed_out,
         "command": argv,
@@ -250,4 +275,5 @@ def run_command(command: str, args: list[str], cwd: str, timeout_seconds: int | 
         "stderr": stderr,
         "timed_out": timed_out,
         "duration_ms": duration_ms,
+        "warnings": warnings,
     }

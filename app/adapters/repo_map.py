@@ -59,7 +59,6 @@ LANGUAGE_BY_SUFFIX = {
 }
 
 SPECIAL_LANGUAGE_FILES = {
-    "Dockerfile": "docker",
     "Makefile": "make",
 }
 
@@ -72,13 +71,9 @@ CONFIG_FILE_NAMES = {
     "poetry.lock",
     "Pipfile",
     "Pipfile.lock",
-    "Dockerfile",
-    "docker-compose.yml",
-    "docker-compose.yaml",
     ".env",
     ".env.example",
     ".gitignore",
-    ".dockerignore",
     "mypy.ini",
     "pytest.ini",
     "ruff.toml",
@@ -87,9 +82,6 @@ CONFIG_FILE_NAMES = {
 IMPORTANT_FILE_NAMES = {
     "README.md",
     "README.rst",
-    "Dockerfile",
-    "docker-compose.yml",
-    "docker-compose.yaml",
     "pyproject.toml",
     "package.json",
     "requirements.txt",
@@ -104,9 +96,6 @@ ENTRYPOINT_FILE_NAMES = {
     "manage.py",
     "index.js",
     "index.ts",
-    "Dockerfile",
-    "docker-compose.yml",
-    "docker-compose.yaml",
 }
 
 FRAMEWORK_DEPENDENCY_MAP = {

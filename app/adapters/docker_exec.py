@@ -56,6 +56,14 @@ def _clean_args(args: Sequence[str] | None) -> list[str]:
     return cleaned
 
 
+def _host_env() -> dict:
+    env = dict(os.environ)
+    env.setdefault("PYTHONUNBUFFERED", "1")
+    env.setdefault("CI", "1")
+    env.setdefault("NO_COLOR", "1")
+    return env
+
+
 def _docker_exec(container: str, inner_args: list[str], timeout_seconds: int | None = None) -> dict:
     if not RUN_COMMAND_ENABLED:
         raise PermissionError("run_command tool disabled")
@@ -64,25 +72,30 @@ def _docker_exec(container: str, inner_args: list[str], timeout_seconds: int | N
     timeout = min(timeout_seconds or RUN_COMMAND_MAX_TIMEOUT_SEC, RUN_COMMAND_MAX_TIMEOUT_SEC)
     argv = ["docker", "exec", container] + inner_args
 
-    env = {
-        "PATH": os.environ.get("PATH", ""),
-        "PYTHONUNBUFFERED": "1",
-        "CI": "1",
-        "NO_COLOR": "1",
-        "DOCKER_HOST": os.environ.get("DOCKER_HOST", "unix:///var/run/docker.sock"),
-    }
-
     start = time.monotonic()
-    proc = subprocess.Popen(
-        argv,
-        env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        shell=False,
-        start_new_session=True,
-    )
+
+    try:
+        proc = subprocess.Popen(
+            argv,
+            env=_host_env(),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            shell=False,
+            start_new_session=True,
+        )
+    except FileNotFoundError as exc:
+        duration_ms = int((time.monotonic() - start) * 1000)
+        return {
+            "ok": False,
+            "command": argv,
+            "returncode": 127,
+            "stdout": "",
+            "stderr": f"docker CLI not found. Install Docker on the host. ({exc})",
+            "timed_out": False,
+            "duration_ms": duration_ms,
+        }
 
     timed_out = False
     try:
@@ -93,6 +106,9 @@ def _docker_exec(container: str, inner_args: list[str], timeout_seconds: int | N
         stdout, stderr = proc.communicate()
 
     duration_ms = int((time.monotonic() - start) * 1000)
+
+    if proc.returncode == 127:
+        stderr += "\nHint: docker not available or not on PATH."
 
     return {
         "ok": proc.returncode == 0 and not timed_out,
@@ -123,7 +139,6 @@ def docker_exec_cat(container: str, path: str, timeout_seconds: int | None = Non
 
 def docker_exec_http_probe(container: str, url: str, timeout_seconds: int | None = None) -> dict:
     timeout = min(timeout_seconds or RUN_COMMAND_MAX_TIMEOUT_SEC, RUN_COMMAND_MAX_TIMEOUT_SEC)
-    # Prefer curl because its exit codes and --fail behavior are useful for debugging health checks.
     return _docker_exec(
         container,
         ["curl", "--fail", "--silent", "--show-error", "--location", "--max-time", str(timeout), _validate_url(url)],
