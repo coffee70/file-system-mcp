@@ -2,7 +2,7 @@ services:
   mcp-code-assistant:
     build: .
     ports:
-      - "8000:8000"
+      - "8003:8000"
     environment:
       WORKSPACE_ROOT: /workspace
       ENABLE_WRITES: ${ENABLE_WRITES:-false}
